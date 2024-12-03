@@ -1,49 +1,60 @@
 import xarray as xr
 
-# Load the dataset
+# Load dataset and print key information
 data = xr.open_dataset("./puget_sound_data/wod_osd_2021.nc")
+print("Dataset loaded. Summary:")
+print(data)
 
-# Inspect the dataset structure
-print("Coordinates:", data.coords)
-print("Variables:", data.variables)
+# Extract debugging information for later use
+dataset_summary = {
+    "coordinates": list(data.coords.keys()),
+    "variables": list(data.variables.keys()),
+    "dimensions": dict(data.dims),
+    "attributes": dict(data.attrs)
+}
 
-# Ensure 'lat' and 'lon' are treated as coordinates
+def debug_info():
+    print("\n=== Dataset Debug Info ===")
+    print("Coordinates:", dataset_summary["coordinates"])
+    print("Variables:", dataset_summary["variables"])
+    print("Dimensions:", dataset_summary["dimensions"])
+    print("Attributes:", dataset_summary["attributes"])
+
+# Ensure 'lat' and 'lon' are coordinates
 if 'lat' in data.variables and 'lon' in data.variables:
-    print("'lat' and 'lon' exist as variables, setting them as coordinates.")
     data = data.set_coords(["lat", "lon"])
-
-# Check if 'lat' and 'lon' can be used for filtering
-if 'lat' not in data.coords or 'lon' not in data.coords:
-    print("'lat' and 'lon' are not coordinates. Attempting to set them.")
+else:
     try:
         data = data.assign_coords(lat=data['lat'], lon=data['lon'])
     except Exception as e:
-        print("Failed to set 'lat' and 'lon' as coordinates:", e)
-        raise
+        debug_info()
+        raise ValueError("Failed to set 'lat' and 'lon' as coordinates.") from e
 
-# Filter data for the Puget Sound region (47.5° N to 48.5° N, 122.5° W to 123.5° W)
+# Filter for Puget Sound region (47.5°N to 48.5°N, 122.5°W to 123.5°W)
 try:
     puget_sound_data = data.where(
         (data["lat"] >= 47.5) & (data["lat"] <= 48.5) &
         (data["lon"] >= -123.5) & (data["lon"] <= -122.5), drop=True
     )
+    print("Filtering successful. Filtered data dimensions:", puget_sound_data.dims)
 except Exception as e:
-    print("Error during filtering:", e)
-    raise
+    debug_info()
+    raise ValueError("Error during filtering.") from e
 
-# Check the filtered data
-print("Filtered data:", puget_sound_data)
-
-# Extract temperature and salinity variables
+# Extract variables of interest
 try:
     temperature = puget_sound_data["Temperature"]
     salinity = puget_sound_data["Salinity"]
+    print("Variables extracted: Temperature and Salinity.")
 except KeyError as e:
-    print("Error accessing variables:", e)
-    print("Available variables:", puget_sound_data.variables)
-    raise
+    debug_info()
+    raise KeyError(f"Required variables not found: {e}")
 
-# Save the filtered dataset to a new NetCDF file
+# Save filtered data
 filtered_file_path = "./puget_sound_data/puget_sound_filtered.nc"
-puget_sound_data.to_netcdf(filtered_file_path)
-print(f"Filtered dataset saved to: {filtered_file_path}")
+try:
+    puget_sound_data.to_netcdf(filtered_file_path)
+    print(f"Filtered dataset saved to: {filtered_file_path}")
+except Exception as e:
+    debug_info()
+    raise IOError(f"Failed to save filtered dataset to {filtered_file_path}.") from e
