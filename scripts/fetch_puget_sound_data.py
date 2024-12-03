@@ -31,11 +31,16 @@ else:
         debug_info()
         raise ValueError("Failed to set 'lat' and 'lon' as coordinates.") from key_error
 
-# Filter for Puget Sound region (47.5°N to 48.5°N, 122.5°W to 123.5°W)
+# Verify dataset's coordinate range
+print("Verifying dataset's coordinate ranges:")
+print("Latitude range in dataset:", data["lat"].min().values, "to", data["lat"].max().values)
+print("Longitude range in dataset:", data["lon"].min().values, "to", data["lon"].max().values)
+
+# Adjusted boundaries for Puget Sound region (47.0°N to 48.5°N, 123.5°W to 122.0°W)
 try:
     puget_sound_data = data.where(
-        (data["lat"] >= 47.5) & (data["lat"] <= 48.5) &
-        (data["lon"] >= -123.5) & (data["lon"] <= -122.5), drop=True
+        (data["lat"] >= 47.0) & (data["lat"] <= 48.5) &
+        (data["lon"] >= -123.5) & (data["lon"] <= -122.0), drop=True
     )
     print("Filtering successful. Filtered data dimensions:", puget_sound_data.dims)
 except ValueError as filter_error:
