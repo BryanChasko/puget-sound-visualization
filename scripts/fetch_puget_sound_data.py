@@ -1,7 +1,7 @@
 import xarray as xr
 
 # Load dataset and print key information
-data = xr.open_dataset("./puget_sound_data/wod_osd_2021.nc")
+data = xr.open_dataset("./puget_sound_data/wod_ctd_2021.nc")
 print("Dataset loaded. Summary:")
 print(data)
 
@@ -61,15 +61,15 @@ if puget_sound_data.dims.get("casts", 0) == 0:
 
 # Extract variables of interest
 try:
-    temperature = puget_sound_data["Temperature"]
-    salinity = puget_sound_data["Salinity"]
+    temperature = puget_sound_data["temperature"]  # Update variable name to match CTD format
+    salinity = puget_sound_data["salinity"]        # Update variable name to match CTD format
     print("Variables extracted: Temperature and Salinity.")
 except KeyError as variable_error:
     debug_info()
     raise KeyError(f"Required variables not found: {variable_error}")
 
 # Save filtered data with explicit encoding
-filtered_file_path = "./puget_sound_data/puget_sound_filtered.nc"
+filtered_file_path = "./puget_sound_data/puget_sound_ctd_filtered.nc"
 try:
     encoding = {var: {"zlib": True, "complevel": 5} for var in puget_sound_data.variables}
     puget_sound_data.to_netcdf(filtered_file_path, encoding=encoding)
