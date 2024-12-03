@@ -7,10 +7,19 @@ data = xr.open_dataset("./puget_sound_data/wod_osd_2021.nc")
 print("Coordinates:", data.coords)
 print("Variables:", data.variables)
 
-# Ensure 'lat' and 'lon' are treated as coordinates and dimensions
-if 'casts' in data.dims and 'lat' in data and 'lon' in data:
-    print("Lat and Lon are not dimension coordinates. Converting...")
-    data = data.set_index(index="casts").set_coords(["lat", "lon"])
+# Ensure 'lat' and 'lon' are treated as coordinates
+if 'lat' in data.variables and 'lon' in data.variables:
+    print("'lat' and 'lon' exist as variables, setting them as coordinates.")
+    data = data.set_coords(["lat", "lon"])
+
+# Check if 'lat' and 'lon' can be used for filtering
+if 'lat' not in data.coords or 'lon' not in data.coords:
+    print("'lat' and 'lon' are not coordinates. Attempting to set them.")
+    try:
+        data = data.assign_coords(lat=data['lat'], lon=data['lon'])
+    except Exception as e:
+        print("Failed to set 'lat' and 'lon' as coordinates:", e)
+        raise
 
 # Filter data for the Puget Sound region (47.5° N to 48.5° N, 122.5° W to 123.5° W)
 try:
@@ -20,7 +29,6 @@ try:
     )
 except Exception as e:
     print("Error during filtering:", e)
-    print("Latitude and longitude might not be structured as expected.")
     raise
 
 # Check the filtered data
