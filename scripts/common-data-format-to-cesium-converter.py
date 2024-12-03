@@ -12,31 +12,36 @@ print(data)
 print(f"Available dimensions: {list(data.dims)}")
 print(f"Available coordinates: {list(data.coords)}")
 
-# Extract temperature and salinity at the surface level
+# Extract surface-level temperature and salinity
 try:
-    temperature = data["Temperature"].isel(Temperature_obs=0).values  # Assuming surface-level data
-    salinity = data["Salinity"].isel(Salinity_obs=0).values  # Assuming surface-level data
-    latitudes = data["lat"].values
-    longitudes = data["lon"].values
+    temperature = data["Temperature"].isel(Temperature_obs=0).values.flatten()  # Flatten array to 1D
+    salinity = data["Salinity"].isel(Salinity_obs=0).values.flatten()  # Flatten array to 1D
+    latitudes = data["lat"].values.flatten()
+    longitudes = data["lon"].values.flatten()
     print("Variables extracted: Temperature, Salinity, Latitude, Longitude.")
 except KeyError as e:
     raise KeyError(f"Required variable missing: {e}")
+except IndexError as e:
+    raise IndexError(f"Issue extracting data: {e}")
 
 # Convert to GeoJSON format
 features = []
 for i in range(len(latitudes)):
-    feature = {
-        "type": "Feature",
-        "geometry": {
-            "type": "Point",
-            "coordinates": [float(longitudes[i]), float(latitudes[i])]
-        },
-        "properties": {
-            "Temperature": float(temperature[i]),
-            "Salinity": float(salinity[i]),
+    try:
+        feature = {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [float(longitudes[i]), float(latitudes[i])]
+            },
+            "properties": {
+                "Temperature": float(temperature[i]) if i < len(temperature) else None,
+                "Salinity": float(salinity[i]) if i < len(salinity) else None,
+            }
         }
-    }
-    features.append(feature)
+        features.append(feature)
+    except IndexError as e:
+        print(f"Index error while creating feature for point {i}: {e}")
 
 geojson_data = {
     "type": "FeatureCollection",
