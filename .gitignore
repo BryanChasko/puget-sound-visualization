@@ -11,3 +11,16 @@ __pycache__/
 aws/
 .ssh/
 puget_sound_data/
+
+# Ignore node_modules in the cesium-app directory
+cesium-app/node_modules/
+# Ignore Cesium assets
+cesium-app/public/Cesium/
+# Ignore the data folder (puget_sound_data)
+cesium-app/public/puget_sound_data/
+# Ignore server log
+cesium-app/server.log
+# Ignore package.json and package-lock.json
+cesium-app/package.json
+cesium-app/package-lock.json
+
