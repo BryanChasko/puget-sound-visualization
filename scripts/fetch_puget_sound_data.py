@@ -60,13 +60,18 @@ if puget_sound_data.dims.get("casts", 0) == 0:
     raise ValueError("Filtering resulted in an empty dataset. Please verify the geographic boundaries.")
 
 # Extract variables of interest
+available_variables = dataset_summary["variables"]
+print("Available variables in the dataset:", available_variables)
+
 try:
-    temperature = puget_sound_data["temperature"]  # Update variable name to match CTD format
-    salinity = puget_sound_data["salinity"]        # Update variable name to match CTD format
-    print("Variables extracted: Temperature and Salinity.")
-except KeyError as variable_error:
+    temperature_var = next(var for var in available_variables if 'temp' in var.lower())
+    salinity_var = next(var for var in available_variables if 'salinity' in var.lower())
+    temperature = puget_sound_data[temperature_var]
+    salinity = puget_sound_data[salinity_var]
+    print(f"Variables extracted: Temperature ({temperature_var}) and Salinity ({salinity_var}).")
+except StopIteration:
     debug_info()
-    raise KeyError(f"Required variables not found: {variable_error}")
+    raise KeyError("Could not find appropriate variables for temperature or salinity in the dataset.")
 
 # Save filtered data with explicit encoding
 filtered_file_path = "./puget_sound_data/puget_sound_ctd_filtered.nc"
