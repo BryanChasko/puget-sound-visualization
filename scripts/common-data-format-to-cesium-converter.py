@@ -1,41 +1,50 @@
 import xarray as xr
 import json
 
-# Load the filtered dataset
-data = xr.open_dataset("./puget_sound_data/puget_sound_ctd_filtered.nc")
+# Load the dataset
+data = xr.open_dataset("./puget_sound_data/wod_ctd_2021.nc")
+print("Dataset loaded.")
 
-# Extract relevant variables
-lat = data["lat"].values
-lon = data["lon"].values
-temperature = data["Temperature"].isel(z_obs=0).values  # Surface-level data
-salinity = data["Salinity"].isel(z_obs=0).values
+# Debugging: Print dataset summary
+print(data)
 
-# Combine data into GeoJSON format
-geojson_features = []
-for i in range(len(lat)):
-    if not (temperature[i] or salinity[i]):  # Skip if no data
-        continue
+# Verify available dimensions and coordinates
+print(f"Available dimensions: {list(data.dims)}")
+print(f"Available coordinates: {list(data.coords)}")
+
+# Extract temperature and salinity at the surface level
+try:
+    temperature = data["Temperature"].isel(Temperature_obs=0).values  # Assuming surface-level data
+    salinity = data["Salinity"].isel(Salinity_obs=0).values  # Assuming surface-level data
+    latitudes = data["lat"].values
+    longitudes = data["lon"].values
+    print("Variables extracted: Temperature, Salinity, Latitude, Longitude.")
+except KeyError as e:
+    raise KeyError(f"Required variable missing: {e}")
+
+# Convert to GeoJSON format
+features = []
+for i in range(len(latitudes)):
     feature = {
         "type": "Feature",
         "geometry": {
             "type": "Point",
-            "coordinates": [float(lon[i]), float(lat[i])],
+            "coordinates": [float(longitudes[i]), float(latitudes[i])]
         },
         "properties": {
-            "Temperature": float(temperature[i]) if temperature[i] else None,
-            "Salinity": float(salinity[i]) if salinity[i] else None,
-        },
+            "Temperature": float(temperature[i]),
+            "Salinity": float(salinity[i]),
+        }
     }
-    geojson_features.append(feature)
+    features.append(feature)
 
 geojson_data = {
     "type": "FeatureCollection",
-    "features": geojson_features,
+    "features": features
 }
 
-# Save to a GeoJSON file
-output_path = "./puget_sound_data/puget_sound_ctd.geojson"
-with open(output_path, "w") as f:
+# Save to GeoJSON file
+geojson_file_path = "./puget_sound_data/puget_sound_data.geojson"
+with open(geojson_file_path, "w") as f:
     json.dump(geojson_data, f, indent=2)
-
-print(f"GeoJSON file saved to {output_path}")
+    print(f"GeoJSON file saved: {geojson_file_path}")
