@@ -33,19 +33,31 @@ else:
 
 # Verify dataset's coordinate range
 print("Verifying dataset's coordinate ranges:")
-print("Latitude range in dataset:", data["lat"].min().values, "to", data["lat"].max().values)
-print("Longitude range in dataset:", data["lon"].min().values, "to", data["lon"].max().values)
+lat_min, lat_max = data["lat"].min().values, data["lat"].max().values
+lon_min, lon_max = data["lon"].min().values, data["lon"].max().values
+print(f"Latitude range in dataset: {lat_min} to {lat_max}")
+print(f"Longitude range in dataset: {lon_min} to {lon_max}")
 
-# Adjusted boundaries for Puget Sound region (47.0°N to 48.5°N, 123.5°W to 122.0°W)
-try:
+# Adjust boundaries for Puget Sound region based on coordinate range
+if lon_min < 0:  # Using -180° to 180° convention
+    print("Using -180° to 180° longitude convention.")
     puget_sound_data = data.where(
         (data["lat"] >= 47.0) & (data["lat"] <= 48.5) &
         (data["lon"] >= -123.5) & (data["lon"] <= -122.0), drop=True
     )
-    print("Filtering successful. Filtered data dimensions:", puget_sound_data.dims)
-except ValueError as filter_error:
+elif lon_min >= 0:  # Using 0° to 360° convention
+    print("Using 0° to 360° longitude convention.")
+    puget_sound_data = data.where(
+        (data["lat"] >= 47.0) & (data["lat"] <= 48.5) &
+        (data["lon"] >= 236.5) & (data["lon"] <= 238.0), drop=True
+    )
+else:
+    raise ValueError("Longitude range is not properly defined.")
+
+# Check if filtering was successful
+if puget_sound_data.dims.get("casts", 0) == 0:
     debug_info()
-    raise ValueError("Error during filtering.") from filter_error
+    raise ValueError("Filtering resulted in an empty dataset. Please verify the geographic boundaries.")
 
 # Extract variables of interest
 try:
