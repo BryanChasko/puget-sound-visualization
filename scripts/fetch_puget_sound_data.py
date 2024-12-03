@@ -1,7 +1,7 @@
 import xarray as xr
 
 # Load the dataset
-data = xr.open_dataset("./path-to-save/wod_osd_2021.nc")
+data = xr.open_dataset("./puget_sound_data/wod_osd_2021.nc")
 
 # Inspect the dataset to check variable names and coordinates
 print("Coordinates:", data.coords)
