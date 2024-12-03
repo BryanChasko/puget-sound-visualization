@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.vscode/
+.idea/
+.DS_Store
+*.log
+.cache/
+.pip/
+aws/
+.ssh/
+puget_sound_data/
