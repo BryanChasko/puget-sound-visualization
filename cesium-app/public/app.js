@@ -6,9 +6,33 @@ console.log('Cesium version:', Cesium.VERSION);
 // Initialize the Cesium Viewer
 const viewer = new Cesium.Viewer('cesiumContainer');
 
-// Commented out the GeoJSON loading for now
-// Load the GeoJSON file for Puget Sound visualization
- Cesium.GeoJsonDataSource.load('./puget_sound_data/puget_sound_data.geojson').then(function (dataSource) {
-     viewer.dataSources.add(dataSource);
-     viewer.flyTo(dataSource);
- });
+// Define the data points within Puget Sound
+const dataPoints = [
+    { lat: 47.6, lon: -122.3, temperature: 10.5, salinity: 30.1 },
+    { lat: 47.7, lon: -122.4, temperature: 11.0, salinity: 29.8 },
+    { lat: 47.8, lon: -122.5, temperature: 10.8, salinity: 30.0 },
+    { lat: 47.9, lon: -122.6, temperature: 10.7, salinity: 30.2 },
+    { lat: 48.0, lon: -122.7, temperature: 10.9, salinity: 29.9 }
+];
+
+// Add the data points to the Cesium Viewer
+dataPoints.forEach(point => {
+    viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(point.lon, point.lat),
+        point: {
+            pixelSize: 10,
+            color: Cesium.Color.RED
+        },
+        label: {
+            text: `Temp: ${point.temperature}°C\nSalinity: ${point.salinity}`,
+            font: '14pt monospace',
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            outlineWidth: 2,
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+            pixelOffset: new Cesium.Cartesian2(0, -9)
+        }
+    });
+});
+
+// Fly to the data points
+viewer.zoomTo(viewer.entities);
